@@ -88,3 +88,7 @@ def getUserID(email):
 
 if __name__ == "__main__":
     print("running loginQueries")
+    addUserEntry('naufalalexs', 'naufalalexs@gmail.com', 'naufal')
+    addUserEntry('naufalalexs2', 'naufalalexs2@gmail.com', 'naufal')
+    addUserEntry('naufalalexs3', 'naufalalexs3@gmail.com', 'naufal')
+    showUserEntries()
