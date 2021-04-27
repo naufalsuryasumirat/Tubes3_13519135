@@ -37,6 +37,16 @@ def getLatestTgsID(user_id):
     if len(rows) == 0: return None
     return rows[0][0]
 
+# Mendapatkan entry terbaru untuk suatu user
+def getLatestEntry(user_id):
+    connection = sqlite3.connect('database.db')
+    cursor = connection.cursor()
+    cursor.execute("""SELECT * FROM t_dln WHERE user_id = ?
+                    ORDER BY tgs_id DESC LIMIT 1""", (user_id,))
+    rows = cursor.fetchall()
+    if len(rows) == 0: return None
+    return rows[0]
+
 # Menambahkan deadline tugas baru untuk suatu user
 # Mengembalikan False jika entry sudah terdapat, true jika belum
 # user_id = integer, date = datetime (yyyy-mm-dd), type = keyword, matkul = kode/nama
@@ -112,7 +122,7 @@ def getDeadlineWithType(user_id, tipe):
     connection = sqlite3.connect('database.db')
     cursor = connection.cursor()
     entry = (user_id, tipe)
-    cursor.execute("""SELECT tanggal, matkul FROM t_dln 
+    cursor.execute("""SELECT * FROM t_dln 
                     WHERE user_id = ? AND type = ?""", entry)
     return cursor.fetchall()
 
@@ -121,7 +131,7 @@ def getDeadlineMatkul(user_id, matkul):
     connection = sqlite3.connect('database.db')
     cursor = connection.cursor()
     entry = (user_id, matkul)
-    cursor.execute("""SELECT tanggal, type FROM t_dln 
+    cursor.execute("""SELECT * FROM t_dln 
                     WHERE user_id = ? AND matkul = ?""", entry)
     return cursor.fetchall()
 
@@ -130,7 +140,7 @@ def getDeadlineMatkulType(user_id, matkul, tipe):
     connection = sqlite3.connect('database.db')
     cursor = connection.cursor()
     entry = (user_id, matkul, tipe)
-    cursor.execute("""SELECT tanggal FROM t_dln WHERE user_id = ? 
+    cursor.execute("""SELECT * FROM t_dln WHERE user_id = ? 
                 AND matkul = ? AND type = ?""", entry)
     return cursor.fetchall()
 
@@ -185,6 +195,60 @@ def getDeadlineXYears(user_id, x_year):
     future = now + relativedelta(years = x_year)
     return getDeadlineBetween(user_id, now, future)
 
+# Mendapatkan info task berdasarkan user_id dan tgs_id
+def getTask(user_id, tgs_id):
+    if not isTgsIDExist(user_id, tgs_id): return None
+    connection = sqlite3.connect('database.db')
+    cursor = connection.cursor()
+    entry = (user_id, tgs_id)
+    command = "SELECT * FROM t_dln WHERE user_id = ? AND tgs_id = ?"
+    cursor.execute(command, entry)
+    rows = cursor.fetchall()
+    return rows[0]
+
+def getDeadlineBetweenType(user_id, date1, date2, tipe):
+    connection = sqlite3.connect('database.db')
+    cursor = connection.cursor()
+    if (date1 <= date2): 
+        entry = (user_id, tipe, date1.strftime("%y-%m-%d"), date2.strftime("%y-%m-%d"))
+    else:
+        entry = (user_id, tipe, date2.strftime("%y-%m-%d"), date1.strftime("%y-%m-%d"))
+    cursor.execute("""SELECT * FROM t_dln WHERE user_id = ? AND type = ?
+                AND tanggal >= ? AND tanggal <= ?""", entry)
+    rows = cursor.fetchall()
+    if len(rows) == 0: return None
+    return rows
+
+def getDeadlineOnXDateType(user_id, date, tipe):
+    connection = sqlite3.connect('database.db')
+    cursor = connection.cursor()
+    entry = (user_id, date.strftime("%y-%m-%d"), tipe)
+    cursor.execute("""SELECT * FROM t_dln WHERE user_id = ?
+                    AND tanggal = ? AND type = ?""", entry)
+    rows = cursor.fetchall()
+    if len(rows) == 0: return None
+    return rows
+
+def getDeadlineXDaysType(user_id, x_day, tipe):
+    now = date.today()
+    future = now + timedelta(days = x_day)
+    return getDeadlineBetweenType(user_id, now, future, tipe)
+
+def getDeadlineXWeeksType(user_id, x_week, tipe):
+    now = date.today()
+    future = now + timedelta(weeks = x_week)
+    return getDeadlineBetweenType(user_id, now, future, tipe)
+
+def getDeadlineXMonthsType(user_id, x_month, tipe):
+    now = date.today()
+    future = now + relativedelta(months = x_month)
+    return getDeadlineBetweenType(user_id, now, future, tipe)
+
+def getDeadlineXYearsType(user_id, x_year, tipe):
+    now = date.today()
+    future = now + relativedelta(years = x_year)
+    return getDeadlineBetweenType(user_id, now, future, tipe)
+
 # Menghilangkan deadline
 def removeDeadlineEntry(user_id, tgs_id):
     if not isTgsIDExist(user_id, tgs_id): return False
@@ -194,9 +258,19 @@ def removeDeadlineEntry(user_id, tgs_id):
     cursor.execute("""DELETE FROM t_dln WHERE user_id = ?
                     AND tgs_id = ?""", entry)
     cursor.connection.commit()
-    return
+    return True
 
-
+# Mengupdate deadline suatu tugas
+def updateDeadlineEntry(user_id, tgs_id, date):
+    if not isTgsIDExist(user_id, tgs_id): return False
+    connection = sqlite3.connect('database.db')
+    cursor = connection.cursor()
+    entry = (date, user_id, tgs_id)
+    command = """UPDATE t_akun SET tanggal = ? 
+                WHERE user_id = ? AND tgs_id = ?"""
+    cursor.execute(command, entry)
+    cursor.connection.commit()
+    return True
 
 if __name__ == "__main__":
     print("running requestQueries")

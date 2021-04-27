@@ -95,6 +95,15 @@ def getUserID(email):
     rows = cursor.fetchall()
     return rows[0][0]
 
+def getUserEmail(user_id):
+    connection = sqlite3.connect('database.db')
+    cursor = connection.cursor()
+    command = "SELECT email FROM t_akun WHERE user_id = ?"
+    cursor.execute(command, (user_id,))
+    rows = cursor.fetchall()
+    if len(rows) == 0: return None
+    return rows[0][0]
+
 if __name__ == "__main__":
     print("running loginQueries")
     addUserEntry('naufalalexs', 'naufalalexs@gmail.com', 'naufal')

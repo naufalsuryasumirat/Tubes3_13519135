@@ -3,6 +3,7 @@ import socket
 import loginQueries as lq
 import requestQueries as rq
 import initializedatabase as init
+import backend as bd
 from flask import Flask, render_template, redirect, request, session, url_for
 from datetime import datetime
 
@@ -16,6 +17,10 @@ dateformat = "%Y-%m-%d" # Format tanggal
 def add_chat(name, message):
     chat_messages.append({"name": name, "msg": message, "time": datetime.now().strftime(timeformat)})
     return
+
+# Mengubah string untuk ditampilkan pada website
+def convertmessage(input):
+    return input.replace("\n", "<br/>")
 
 # Login Page
 @app.route('/', methods = ["GET", "POST"])
@@ -60,16 +65,14 @@ def register():
 # Chat Page
 @app.route('/chat/<user_id>', methods = ["GET", "POST"])
 def chat(user_id):
+    if lq.getUserEmail(user_id) == None or lq.getUserEmail(user_id) not in session["email"]:
+        return redirect(url_for('home'))
     name = lq.getNameID(user_id)
-    # print(user_id)
-    # print(name)
     if request.method == "POST":
         message = request.form["message"]
         name = lq.getNameID(user_id)
         add_chat(name, message)
-        # add_chat('bot', message + "from bot")
-        # print(name)
-        # print(message)
+        add_chat('bot', bd.get_bot_message(message, user_id).replace("\n", "<br>"))
         
 
     return render_template('chat.html', name = name, messages = chat_messages) # Placeholder
