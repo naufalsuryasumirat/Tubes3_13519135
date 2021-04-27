@@ -76,6 +76,15 @@ def getName(email):
     rows = cursor.fetchall()
     return rows[0][0]
 
+#Mengambil nama user dengan input user_id
+def getNameID(user_id):
+    connection = sqlite3.connect('database.db')
+    cursor = connection.cursor()
+    command = "SELECT name FROM t_akun WHERE user_id = ?"
+    cursor.execute(command, (user_id,))
+    rows = cursor.fetchall()
+    return rows[0][0]
+
 # Mengambil id user dengan input email
 def getUserID(email):
     if not isEmailExist(email): return None

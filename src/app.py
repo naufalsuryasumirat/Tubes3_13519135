@@ -14,7 +14,7 @@ dateformat = "%Y-%m-%d" # Format tanggal
 
 # Menambahkan message pada list chat_messages
 def add_chat(name, message):
-    chat_messages.append({"name": name, "message": message, "time": datetime.now().strftime(timeformat)})
+    chat_messages.append({"name": name, "msg": message, "time": datetime.now().strftime(timeformat)})
     return
 
 # Login Page
@@ -22,17 +22,19 @@ def add_chat(name, message):
 def home():
     error = ""
     if "email" in session:
-        return redirect(url_for('about')) # Ganti
+        return redirect(url_for('chat', user_id = lq.getUserID(session["email"]))) # Ganti
     if request.method == "POST":
-        if not request.form["email"] or not request.form["password"]:
+        email = request.form["email"]
+        password = request.form["password"]
+        if not email or not password:
             error = "Please enter email and password"
-        elif not lq.isEmailExist(request.form["email"]):
+        elif not lq.isEmailExist(email):
             error = "Email not registered, please register first"
-        elif lq.getLoginInfo(request.form["email"]) != request.form["password"]:
+        elif lq.getLoginInfo(email) != password:
             error = "Incorrect password"
-        elif lq.getLoginInfo(request.form["email"]) == request.form["password"]:
-            session["email"] = request.form["email"]
-            return redirect(url_for('about')) # Placeholder
+        elif lq.getLoginInfo(email) == password:
+            session["email"] = email
+            return redirect(url_for('chat', user_id = lq.getUserID(email))) # Placeholder
 
     return render_template('login.html', error = error)
 
@@ -41,7 +43,7 @@ def home():
 def register():
     error = ""
     if "email" in session: # not working
-        return redirect(url_for('about')) # Ganti
+        return redirect(url_for('chat', user_id = lq.getUserID(session["email"]))) # Ganti
     if request.method == "POST":
         name = request.form["name"]
         email = request.form["email"]
@@ -58,16 +60,23 @@ def register():
 # Chat Page
 @app.route('/chat/<user_id>', methods = ["GET", "POST"])
 def chat(user_id):
-    return render_template('homepage.html') # Placeholder
+    name = lq.getNameID(user_id)
+    # print(user_id)
+    # print(name)
+    if request.method == "POST":
+        message = request.form["message"]
+        name = lq.getNameID(user_id)
+        add_chat(name, message)
+        # add_chat('bot', message + "from bot")
+        # print(name)
+        # print(message)
+        
+
+    return render_template('chat.html', name = name, messages = chat_messages) # Placeholder
 
 # About Page (static)
 @app.route('/about')
 def about():
-    return render_template('homepage.html') # Placeholder
-
-# Instructions Page (static) # Mungkin ga dipake
-@app.route('/instructions')
-def instructions():
     return render_template('homepage.html') # Placeholder
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 *.jpg
-*.css
+src/static/css/upload.css
+src/templates/homepage.html
 *.db
 __pycache__/*
 src/__pycache__/*
