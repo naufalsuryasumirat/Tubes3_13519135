@@ -77,11 +77,8 @@ def chat(user_id):
         
     return render_template('chat.html', name = name, messages = chat_messages[int(user_id) - 1]) # Placeholder
 
-# About Page (static)
-@app.route('/about')
-def about():
-    return render_template('homepage.html') # Placeholder
-
 if __name__ == "__main__":
+    lq.createUserDatabase()
+    rq.createDeadlineDatabase()
     app.run(host = '192.168.100.2', port = 80, debug = True, threaded = True)
     # app.run(debug = True)

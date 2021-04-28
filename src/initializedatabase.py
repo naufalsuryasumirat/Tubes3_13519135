@@ -5,4 +5,4 @@ import requestQueries as rq
 if __name__ == "__main__":
     lq.createUserDatabase()
     rq.createDeadlineDatabase()
-    lq.addUserEntry('naufalalexs', 'naufalalexs@gmail.com', 'naufal')
+    lq.addUserEntry('admin', 'admin@gmail.com', 'admin')

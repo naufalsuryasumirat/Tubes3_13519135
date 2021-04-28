@@ -148,6 +148,9 @@
                     </div>
                 {% else %}
                     <div class = "bot-msg"style = "padding-left: 25px;">
+                        <div class="imgContainer" style = "padding-left: 15px; padding-bottom: 5px;">
+                            <img src="{{ url_for('static', filename = 'robot.png') }}" style = "width:18px; height:20px;"></img>
+                        </div>
                         <p style="color: rgb(80, 250, 123)">
                             {% autoescape false %}
                         <!-- <p style="color: rgb(80, 250, 123)">[{{ message.time }}] {{ message.name }}: {{ message.msg }} </p> -->

@@ -8,3 +8,5 @@ src/static/css/chat.css
 src/date_test.py
 src/test.py
 src/noupload.py
+*.json
+src/static/robotp.png
