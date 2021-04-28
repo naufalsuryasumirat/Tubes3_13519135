@@ -9,13 +9,13 @@ from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET", "135789023949273alsdkjalskdfj")
-chat_messages = [] # Message yang diperlihatkan List of dictionary: {name, message, time}
+chat_messages = [[] for i in range(lq.userCount())] # Message yang diperlihatkan List of dictionary: {name, message, time}
 timeformat = "%H:%M:%S" # Format waktu
 dateformat = "%Y-%m-%d" # Format tanggal
 
 # Menambahkan message pada list chat_messages
-def add_chat(name, message):
-    chat_messages.append({"name": name, "msg": message, "time": datetime.now().strftime(timeformat)})
+def add_chat(name, message, user_id):
+    chat_messages[user_id].append({"name": name, "msg": message, "time": datetime.now().strftime(timeformat)})
     return
 
 # Mengubah string untuk ditampilkan pada website
@@ -46,6 +46,7 @@ def home():
 # Register page
 @app.route('/register', methods = ["GET", "POST"])
 def register():
+    global chat_messages
     error = ""
     if request.method == "POST":
         name = request.form["name"]
@@ -57,6 +58,10 @@ def register():
             error = "Email already registered, please login"
         else:
             lq.addUserEntry(name, email, password)
+            chat_messages2 = [[] for i in range(lq.userCount())]
+            for i in range(len(chat_messages)):
+                chat_messages2[i] = chat_messages[i]
+            chat_messages = chat_messages2
             return redirect(url_for('home'))
     return render_template('register.html', error = error)
 
@@ -67,12 +72,10 @@ def chat(user_id):
     if request.method == "POST":
         message = request.form["message"]
         name = lq.getNameID(user_id)
-        add_chat(name, message)
-        add_chat('bot', bd.get_bot_message(message, int(user_id)).replace("\n", "<br>"))
+        add_chat(name, message, (int(user_id) - 1))
+        add_chat('bot', bd.get_bot_message(message, int(user_id)).replace("\n", "<br>"), (int(user_id) - 1))
         
-        
-
-    return render_template('chat.html', name = name, messages = chat_messages) # Placeholder
+    return render_template('chat.html', name = name, messages = chat_messages[int(user_id) - 1]) # Placeholder
 
 # About Page (static)
 @app.route('/about')
@@ -80,5 +83,5 @@ def about():
     return render_template('homepage.html') # Placeholder
 
 if __name__ == "__main__":
-    app.run(host = '192.168.100.2', port = 80, debug = True)
+    app.run(host = '192.168.100.2', port = 80, debug = True, threaded = True)
     # app.run(debug = True)
