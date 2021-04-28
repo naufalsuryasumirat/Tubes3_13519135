@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel = "stylesheet" type="text/css" href = "{{ url_for('static', filename='css/static.css')}}">
+    <script>
+        function enterKeyEvent(event) {
+            var x = event.key
+            if (x == "Enter"){
+                document.getElementById("form").submit();
+            }
+        }
+        </script>
     <title>Bot Chat for {{ name }}</title>
     <style>
         header {
@@ -96,6 +104,15 @@
             padding: 5px 10px 5px 12px;
             width: 100%;
         }
+        button {
+            float: right;
+            margin-top: 5px;
+            background-color:rgb(255, 121, 198);
+            color:rgb(255, 255, 255);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+        }
         /* Custom Scrollbar */
         /* lebar */
         ::-webkit-scrollbar {
@@ -145,9 +162,9 @@
         </div>
     </div>
     <div class="footer">
-        <form method = "POST">
-            <textarea cols="50" rows="4" name="message" id="message"></textarea>
-            <button>Send message</button>
+        <form method = "POST" id = "form">
+            <textarea cols="50" rows="4" name="message" id="message" onkeypress="enterKeyEvent(event)"></textarea>
+            <button>Send</button>
         </form>
     </div>
 </body>

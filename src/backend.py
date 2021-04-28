@@ -5,7 +5,6 @@ from app import convertmessage
 import requestQueries as rq
 
 keywords = ["kuis", "ujian", "tucil", "tubes", "praktikum"]
-keywordsHelp = ["opsi","help","dilakukan"]
 keywordsUpdate = ["diundur", "undur"]
 
 
@@ -84,7 +83,7 @@ def regExTanggalFormat(inputString):
 		numberMonth = re.search(r"([0-3][0-9])(/|-)([0-1][0-9])(/|-)([0-9]{4}|[0-9]{2})",inputString.lower())
 		date = numberMonth.group(1) + "/" +numberMonth.group(3) + "/"
 		if (len(numberMonth.group(5)) == 2):
-			date = date + "20" + numberMonth.group(3)
+			date = date + "20" + numberMonth.group(5)
 		else:
 			date = date + numberMonth.group(5)
 
@@ -177,9 +176,9 @@ def lihatDaftarTask(input, user_id):
 		date2 = regExTanggal(slicedString) #Cannot use the index
 
 	#N minggu ke depan
-	NMingguDepan = re.search(r"(\d).*minggu.*depan",input.lower())
+	NMingguDepan = re.search(r"(\d+).*minggu.*depan",input.lower())
 	#N hari ke depan
-	NHariDepan = re.search(r"(\d).*hari.*depan",input.lower())
+	NHariDepan = re.search(r"(\d+).*hari.*depan",input.lower())
 	#Hari ini
 	HariIni = re.search(r"hari.*ini",input.lower())
 	##Flag for jenis task
@@ -191,7 +190,7 @@ def lihatDaftarTask(input, user_id):
 	if not semuaTask and not date1 and not NMingguDepan and not NHariDepan and not HariIni and not jenis:
 		return None
 
-	if semuaTask:
+	if semuaTask and not jenis:
 		print("Get All Tasks")
 		got = rq.getDeadlineEntries(user_id)
 		if got:
@@ -309,11 +308,11 @@ def regex_undur(input, user_id):
         if kmp(word, input.lower()): undur = True
     if undur == False:
         return None
-    tgl = re.search(r"\s\d+/\d+/\d+", input.lower())
+    tgl = regExTanggalFormat(input)
     if tgl == None:
-        return "Tolong untuk memasukkan tanggal dengan format yang benar"
-    tgl = convert_date(tgl.group(0).strip())
-    search = re.search(r"task\s\d*", input.lower())
+        return "Tolong untuk memasukkan tanggal"
+    tgl = convert_date(tgl)
+    search = re.search(r"task\s*\d*", input.lower())
     if search == None: return None
     task = -1
     for c in search.group(0).split():
@@ -321,7 +320,7 @@ def regex_undur(input, user_id):
             task = c
     if rq.isTgsIDExist(user_id, task):
         rq.updateDeadlineEntry(user_id, task, tgl)
-        return "Task dengan id " + task + " berhasil diundur menjadi " + tgl.strftime('%d-%m-%Y')
+        return "Task dengan id " + task + " berhasil diundur menjadi " + tgl.strftime('%d/%m/%Y')
     else:
         return "Task tidak terdapat untuk diperbarui"
 
@@ -341,7 +340,7 @@ def taskDone(string, user_id):
 
 #6.
 def opsi(string): 
-	keywordsHelp = ["opsi","help","dilakukan"]
+	keywordsHelp = ["opsi","help","dilakukan", "lakukan"]
 
 	isHelp = False
 	for i in keywordsHelp:
