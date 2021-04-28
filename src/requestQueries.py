@@ -265,8 +265,8 @@ def updateDeadlineEntry(user_id, tgs_id, date):
     if not isTgsIDExist(user_id, tgs_id): return False
     connection = sqlite3.connect('database.db')
     cursor = connection.cursor()
-    entry = (date, user_id, tgs_id)
-    command = """UPDATE t_akun SET tanggal = ? 
+    entry = (date.strftime("%y-%m-%d"), user_id, tgs_id)
+    command = """UPDATE t_dln SET tanggal = ? 
                 WHERE user_id = ? AND tgs_id = ?"""
     cursor.execute(command, entry)
     cursor.connection.commit()

@@ -6,7 +6,7 @@ import requestQueries as rq
 
 keywords = ["kuis", "ujian", "tucil", "tubes", "praktikum"]
 keywordsHelp = ["opsi","help","dilakukan"]
-keywordsUpdate = ["diundur"]
+keywordsUpdate = ["diundur", "undur"]
 
 
 stopwords = ["pada", "tolong", "yakni", "aku", "di", "ke", "dari"]
@@ -22,7 +22,6 @@ def convert_database_date(input):
 def convert_daftarTask(listOfEntry):
 	if (not listOfEntry):
 		return "Tidak ada"
-	
 	outputString = "[Daftar Deadline]\n"
 	idx = 1
 	for i in listOfEntry:
@@ -36,7 +35,7 @@ def regExTanggal(inputString):
 
 def convertEntryToString(entry):
     return "(ID: "+str(entry[1])+ ") "+ \
-        str(entry[3])+" - "+entry[5] + " - " + \
+        convert_database_date(entry[3]).strftime('%d/%m/%Y') +" - "+entry[5] + " - " + \
              entry[4] + " - "+entry[6]
 
 def regExTanggalFormat(inputString):
@@ -158,38 +157,38 @@ def findTask(string, user_id):
 
 
 #2.
-def lihatDaftarTask(string, user_id):
+def lihatDaftarTask(input, user_id):
 	keywordSemuaTask = ["sejauh ini", "semua", "all", "so far"]
 
 	##Flags for all
 	semuaTask = False
 	for i in keywordSemuaTask:
-		if kmp(i, string.lower()):
+		if kmp(i, input.lower()):
 			semuaTask = True
 
 
 	##Flags for time period
 
 	#Between 2 dates
-	date1 = regExTanggal(string)
+	date1 = regExTanggal(input)
 	date2 = None
 	if (date1):
-		slicedString = string.lower().replace(date1.group(),"")
+		slicedString = input.lower().replace(date1.group(),"")
 		date2 = regExTanggal(slicedString) #Cannot use the index
 
 	#N minggu ke depan
-	NMingguDepan = re.search(r"(\d).*minggu.*depan",string.lower())
+	NMingguDepan = re.search(r"(\d).*minggu.*depan",input.lower())
 	#N hari ke depan
-	NHariDepan = re.search(r"(\d).*hari.*depan",string.lower())
+	NHariDepan = re.search(r"(\d).*hari.*depan",input.lower())
 	#Hari ini
-	HariIni = re.search(r"hari.*ini",string.lower())
+	HariIni = re.search(r"hari.*ini",input.lower())
 	##Flag for jenis task
 	jenis = None
 	for i in keywords:
-		if kmp(i, string.lower()):
+		if kmp(i, input.lower()):
 			jenis = i
 
-	if not (semuaTask or date1 or NMingguDepan or NHariDepan or HariIni or jenis):
+	if not semuaTask and not date1 and not NMingguDepan and not NHariDepan and not HariIni and not jenis:
 		return None
 
 	if semuaTask:
@@ -205,15 +204,15 @@ def lihatDaftarTask(string, user_id):
 		elif (NMingguDepan):
 			print("Get " + NMingguDepan.group(1)+ " Minggu depan")
 			if (jenis):
-				return rq.getDeadlineXWeeksType(user_id, NMingguDepan.group(1), jenis)
+				return rq.getDeadlineXWeeksType(user_id, int(NMingguDepan.group(1)), jenis)
 			else:
-				return rq.getDeadlineXWeeks(user_id, NMingguDepan.group(1))
+				return rq.getDeadlineXWeeks(user_id, int(NMingguDepan.group(1)))
 		elif (NHariDepan):
 			# print("Get " + NHariDepan.group(1) + " Hari depan")
 			if (jenis):
-				return rq.getDeadlineXDaysType(user_id, NHariDepan.group(1), jenis)
+				return rq.getDeadlineXDaysType(user_id, int(NHariDepan.group(1)), jenis)
 			else:
-				return rq.getDeadlineXDays(user_id, NHariDepan.group(1))
+				return rq.getDeadlineXDays(user_id, int(NHariDepan.group(1)))
 		elif (HariIni):
 			# print("Get Hari ini")
 			if (jenis):
@@ -253,21 +252,24 @@ def findDeadLineMK(string, user_id):
 		get = rq.getDeadlineMatkul(user_id, kodeMK.group())
 		if (get):
 			first_row = get[0]
-			return convert_database_date(first_row[3])
+			return convert_database_date(first_row[3]).strftime('%d/%m/%Y')
 		else:
-			return None
+			return "Tidak terdapat deadline untuk matkul tersebut"
 	else:
 		return None
 
 #4
 def regex_undur(input, user_id):
+    undur = False
     for word in keywordsUpdate: # redundan, keyword hanya satu
-        if not kmp(word, input): return None
-    tgl = re.search(r"\s\d+/\d+/\d+\s")
+        if kmp(word, input.lower()): undur = True
+    if undur == False:
+        return None
+    tgl = re.search(r"\s\d+/\d+/\d+", input.lower())
     if tgl == None:
         return "Tolong untuk memasukkan tanggal dengan format yang benar"
     tgl = convert_date(tgl.group(0).strip())
-    search = re.search(r"\stask\s\d*", input)
+    search = re.search(r"task\s\d*", input.lower())
     if search == None: return None
     task = -1
     for c in search.group(0).split():
@@ -319,33 +321,23 @@ def opsi(string):
 	return None
 
 def get_bot_message(message, user_id):
-	msgOpsi = opsi(message)
-	if msgOpsi: return msgOpsi
-	msgDuaTanggal = lihatDaftarTask(message, user_id)
-	if msgDuaTanggal: return convert_daftarTask(msgDuaTanggal) # Format
-	find = findTask(message, user_id)
-	if find: return find
-	doneTask = taskDone(message, user_id)
-	if doneTask: return doneTask
-	undurTask = regex_undur(message, user_id)
-	if undurTask: return undurTask
-	findMK = findDeadLineMK(message, user_id)
-	if findMK: return findMK
-	return "Maaf, pesan tidak dikenali"
+    msgOpsi = opsi(message)
+    if msgOpsi: return msgOpsi
+    doneTask = taskDone(message, user_id)
+    if doneTask: return doneTask
+    undurTask = regex_undur(message, user_id)
+    if undurTask: return undurTask
+    msgDuaTanggal = lihatDaftarTask(message, user_id)
+    if msgDuaTanggal: return convert_daftarTask(msgDuaTanggal) # Format
+    find = findTask(message, user_id)
+    if find: return find
+    findMK = findDeadLineMK(message, user_id)
+    if findMK: return findMK
+    return "Maaf, pesan tidak dikenali"
 
 if __name__ == "__main__":
 	txt1 = "Tubes IF2211 String Matching pada 14 April 2021"
 	txt2 = "Halo bot, tolong ingetin kalau ada kuis IF3110 Bab 2 sampai 3 pada 22/04/2021"
 	txt3 = "Halo bot, tolong ingetin kalau ada tubes IF2321 Topik String matching pada 22/05/2021"
 	txt4 = "Apa saja deadline antara 03/04/2021 sampai 15/04/2021"
-	print(regExTanggal(txt1))
-	print(regExTanggal(txt1).group())
-    # print(findTask(txt3))
-	print(re.search(r"(\d\d/\d\d/\d\d)", txt4))
-	print(re.search(r"(\d\d/\d\d/\d\d*\d\d/\d\d/\d\d)", txt4))
-	print(re.search(r"[a-zA-Z]{2}\d{4}", txt1))
-	print(convertmessage("Hello from the \nother side"))
-	print(convert_date('03/04/2021'))
-	print(convert_date('2021/04/03'))
-	print(convert_date('03/04/2021'))
     

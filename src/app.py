@@ -72,7 +72,8 @@ def chat(user_id):
         message = request.form["message"]
         name = lq.getNameID(user_id)
         add_chat(name, message)
-        add_chat('bot', bd.get_bot_message(message, user_id).replace("\n", "<br>"))
+        add_chat('bot', bd.get_bot_message(message, int(user_id)).replace("\n", "<br>"))
+        
         
 
     return render_template('chat.html', name = name, messages = chat_messages) # Placeholder
@@ -83,5 +84,5 @@ def about():
     return render_template('homepage.html') # Placeholder
 
 if __name__ == "__main__":
-    # app.run(host = '192.168.100.2', port = 5000, debug = False)
-    app.run(debug = True)
+    app.run(host = '192.168.100.2', port = 5000, debug = True)
+    # app.run(debug = True)
