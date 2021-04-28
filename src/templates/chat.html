@@ -134,7 +134,9 @@
                         <p style="color: rgb(80, 250, 123)">
                             {% autoescape false %}
                         <!-- <p style="color: rgb(80, 250, 123)">[{{ message.time }}] {{ message.name }}: {{ message.msg }} </p> -->
-                                [{{ message.time }}] {{ message.name }}: {{ message.msg }}
+                                yo-bot:
+                                <br/>
+                                {{ message.msg }}
                             {% endautoescape %}
                         </p>
                     </div>

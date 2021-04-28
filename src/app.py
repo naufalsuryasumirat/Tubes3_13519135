@@ -47,8 +47,6 @@ def home():
 @app.route('/register', methods = ["GET", "POST"])
 def register():
     error = ""
-    if "email" in session: # not working
-        return redirect(url_for('chat', user_id = lq.getUserID(session["email"]))) # Ganti
     if request.method == "POST":
         name = request.form["name"]
         email = request.form["email"]
@@ -65,8 +63,6 @@ def register():
 # Chat Page
 @app.route('/chat/<user_id>', methods = ["GET", "POST"])
 def chat(user_id):
-    if lq.getUserEmail(user_id) == None or lq.getUserEmail(user_id) not in session["email"]:
-        return redirect(url_for('home'))
     name = lq.getNameID(user_id)
     if request.method == "POST":
         message = request.form["message"]
@@ -84,5 +80,5 @@ def about():
     return render_template('homepage.html') # Placeholder
 
 if __name__ == "__main__":
-    app.run(host = '192.168.100.2', port = 5000, debug = True)
+    app.run(host = '192.168.100.2', port = 80, debug = True)
     # app.run(debug = True)

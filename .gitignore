@@ -7,3 +7,4 @@ src/__pycache__/*
 src/static/css/chat.css
 src/date_test.py
 src/test.py
+src/noupload.py

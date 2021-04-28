@@ -35,8 +35,8 @@ def regExTanggal(inputString):
 
 def convertEntryToString(entry):
     return "(ID: "+str(entry[1])+ ") "+ \
-        convert_database_date(entry[3]).strftime('%d/%m/%Y') +" - "+entry[5] + " - " + \
-             entry[4] + " - "+entry[6]
+        convert_database_date(entry[3]).strftime('%d/%m/%Y') +" - "+ entry[5] + " - " + \
+            entry[4].capitalize() + " - " + entry[6]
 
 def regExTanggalFormat(inputString):
 	#Return string
@@ -187,45 +187,89 @@ def lihatDaftarTask(input, user_id):
 	for i in keywords:
 		if kmp(i, input.lower()):
 			jenis = i
-
+	# TEST TEST TEST
 	if not semuaTask and not date1 and not NMingguDepan and not NHariDepan and not HariIni and not jenis:
 		return None
 
 	if semuaTask:
 		print("Get All Tasks")
-		return rq.getDeadlineEntries(user_id)
+		got = rq.getDeadlineEntries(user_id)
+		if got:
+			return convert_daftarTask(got)
+		else:
+			return "Tidak terdapat deadline dalam database"
 	else: # Process Time Period
 		if (date1 and date2):
 			print("Get Between " + regExTanggalFormat(date1.group()) + " " +regExTanggalFormat(date2.group()))
 			if (jenis):
-				return rq.getDeadlineBetweenType(user_id, convert_date(regExTanggalFormat(date1.group())), convert_date(regExTanggalFormat(date2.group())), jenis)
+				got = rq.getDeadlineBetweenType(user_id, convert_date(regExTanggalFormat(date1.group())), convert_date(regExTanggalFormat(date2.group())), jenis)
+				if got:
+					return convert_daftarTask(got)
+				else:
+					return "Tidak terdapat deadline dalam database"
 			else:
-				return rq.getDeadlineBetween(user_id, convert_date(regExTanggalFormat(date1.group())), convert_date(regExTanggalFormat(date2.group())))
+				got = rq.getDeadlineBetween(user_id, convert_date(regExTanggalFormat(date1.group())), convert_date(regExTanggalFormat(date2.group())))
+				if got:
+					return convert_daftarTask(got)
+				else:
+					return "Tidak terdapat deadline dalam database"
 		elif (NMingguDepan):
 			print("Get " + NMingguDepan.group(1)+ " Minggu depan")
 			if (jenis):
-				return rq.getDeadlineXWeeksType(user_id, int(NMingguDepan.group(1)), jenis)
+				got = rq.getDeadlineXWeeksType(user_id, int(NMingguDepan.group(1)), jenis)
+				if got:
+					return convert_daftarTask(got)
+				else:
+					return "Tidak terdapat deadline dalam database"
 			else:
-				return rq.getDeadlineXWeeks(user_id, int(NMingguDepan.group(1)))
+				got = rq.getDeadlineXWeeks(user_id, int(NMingguDepan.group(1)))
+				if got:
+					return convert_daftarTask(got)
+				else:
+					return "Tidak terdapat deadline dalam database"
 		elif (NHariDepan):
 			# print("Get " + NHariDepan.group(1) + " Hari depan")
 			if (jenis):
-				return rq.getDeadlineXDaysType(user_id, int(NHariDepan.group(1)), jenis)
+				got = rq.getDeadlineXDaysType(user_id, int(NHariDepan.group(1)), jenis)
+				if got:
+					return convert_daftarTask(got)
+				else:
+					return "Tidak terdapat deadline dalam database"
 			else:
-				return rq.getDeadlineXDays(user_id, int(NHariDepan.group(1)))
+				got = rq.getDeadlineXDays(user_id, int(NHariDepan.group(1)))
+				if got:
+					return convert_daftarTask(got)
+				else:
+					return "Tidak terdapat deadline dalam database"
 		elif (HariIni):
 			# print("Get Hari ini")
 			if (jenis):
-				return rq.getDeadlineXDaysType(user_id, 0, jenis)
+				got = rq.getDeadlineXDaysType(user_id, 0, jenis)
+				if got:
+					return convert_daftarTask(got)
+				else:
+					return "Tidak terdapat deadline dalam database"
 			else:
-				return rq.getDeadlineXDays(user_id, 0)
+				got = rq.getDeadlineXDays(user_id, 0)
+				if got:
+					return convert_daftarTask(got)
+				else:
+					return "Tidak terdapat deadline dalam database"
             
 		else:
 			# print("Get semua tanggal")
 			if (jenis):
-				return rq.getDeadlineWithType(user_id, jenis)
+				got = rq.getDeadlineWithType(user_id, jenis)
+				if got:
+					return convert_daftarTask(got)
+				else:
+					return "Tidak terdapat deadline dalam database"
 			else:
-				return rq.getDeadlineEntries(user_id)
+				got = rq.getDeadlineEntries(user_id)
+				if got:
+					return convert_daftarTask(got)
+				else:
+					return "Tidak terdapat deadline dalam database"
 
 		#Process Task
 		# if (jenis):
@@ -284,13 +328,15 @@ def regex_undur(input, user_id):
 #5.
 def taskDone(string, user_id):
 	if (kmp("selesai", string.lower()) or kmp("done", string.lower())):
-		ID = re.search(r"\d+", string)
+		tgs_id = re.search(r"\d+", string)
 		# print("Delete ID: "+ ID.group() + " For user: "+ str(user_id))
-		taskToBeDeleted = rq.getTask(user_id, ID)
+		taskToBeDeleted = rq.getTask(user_id, int(tgs_id.group(0)))
+		if taskToBeDeleted == None:
+			return "Tidak terdapat task"
         # outputString = "(ID: "+str(taskToBeDeleted[1])+ ") "+str(taskToBeDeleted[3])+" - "+taskToBeDeleted[5] + " - " + taskToBeDeleted[4] + " - "+taskToBeDeleted[6]
 		outputString = convertEntryToString(taskToBeDeleted)
-		rq.removeDeadlineEntry(user_id, ID)
-		return outputString
+		rq.removeDeadlineEntry(user_id, int(tgs_id.group(0)))
+		return outputString + " berhasil dihapus"
 	else: return None
 
 #6.
@@ -321,19 +367,19 @@ def opsi(string):
 	return None
 
 def get_bot_message(message, user_id):
-    msgOpsi = opsi(message)
-    if msgOpsi: return msgOpsi
-    doneTask = taskDone(message, user_id)
-    if doneTask: return doneTask
-    undurTask = regex_undur(message, user_id)
-    if undurTask: return undurTask
-    msgDuaTanggal = lihatDaftarTask(message, user_id)
-    if msgDuaTanggal: return convert_daftarTask(msgDuaTanggal) # Format
-    find = findTask(message, user_id)
-    if find: return find
-    findMK = findDeadLineMK(message, user_id)
-    if findMK: return findMK
-    return "Maaf, pesan tidak dikenali"
+	msgOpsi = opsi(message)
+	if msgOpsi: return msgOpsi
+	doneTask = taskDone(message, user_id)
+	if doneTask: return doneTask
+	undurTask = regex_undur(message, user_id)
+	if undurTask: return undurTask
+	find = findTask(message, user_id)
+	if find: return find
+	msgDaftar = lihatDaftarTask(message, user_id)
+	if msgDaftar: return msgDaftar # Format
+	findMK = findDeadLineMK(message, user_id)
+	if findMK: return findMK
+	return "Maaf, pesan tidak dikenali"
 
 if __name__ == "__main__":
 	txt1 = "Tubes IF2211 String Matching pada 14 April 2021"
