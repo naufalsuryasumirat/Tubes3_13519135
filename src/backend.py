@@ -139,7 +139,8 @@ def findTask(string, user_id):
 
 	if jenis == None:
 		return None
-	rq.addDeadlineEntry(user_id, convert_date(regExTanggalFormat(tanggal.group())), jenis, kodeMK.group(),  topik)
+	if (rq.addDeadlineEntry(user_id, convert_date(regExTanggalFormat(tanggal.group())), jenis, kodeMK.group(),  topik) == False):
+		return "Task sudah terdapat"
 	entry = rq.getLatestEntry(user_id)
 	outputString = "[TASK BERHASIL DICATAT]\n" + convertEntryToString(entry)
 	return outputString
